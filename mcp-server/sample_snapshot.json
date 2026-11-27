@@ -1,0 +1,25 @@
+{
+  "phase": "UnderAttack",
+  "captured_at": 4102444800,
+  "resources": { "wood": 420, "food": 180, "gold": 250 },
+  "population": { "used": 14, "cap": 20 },
+  "technology": { "age": 1, "researched": ["tech_sharpened_tools_v1"], "researching": [] },
+  "own_army": [
+    { "type": "Worker", "count": 8, "zone": "FarmArea" },
+    { "type": "Spearman", "count": 3, "zone": "BaseCenter" },
+    { "type": "Archer", "count": 3, "zone": "NorthGate" }
+  ],
+  "own_buildings": [
+    { "type": "Citadel", "count": 1 },
+    { "type": "House", "count": 2 },
+    { "type": "Barracks", "count": 1 },
+    { "type": "ArcheryYard", "count": 1 }
+  ],
+  "visible_enemies": [
+    { "type": "Raider", "count": 4, "zone": "NorthGate" }
+  ],
+  "recent_events": [
+    { "kind": "UNDER_ATTACK", "zone": "NorthGate", "seconds_ago": 5 },
+    { "kind": "UNIT_LOST", "unit_type": "Worker", "count": 2, "seconds_ago": 12 }
+  ]
+}

@@ -38,7 +38,7 @@
     "required_age": 1,
     "strengths": ["raider"],
     "weaknesses": ["archer", "guardian"],
-    "description": "Cheap melee infantry with a large bonus against Raiders. Loses to massed Archers and to armored Guardians."
+    "description": "Cheap anti-cavalry melee infantry: the standard counter to cavalry, with a large bonus against Raiders. Loses to massed Archers and to armored Guardians."
   },
   {
     "id": "unit_archer_v1",
