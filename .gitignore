@@ -1,0 +1,26 @@
+# Gizli anahtarlar ve ortam değişkenleri
+.env
+*.env
+*secret*
+*credentials*
+
+# Unity
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+*.csproj
+*.sln
+*.suo
+*.user
+
+# Python / RAG / MCP
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+rag/index/
