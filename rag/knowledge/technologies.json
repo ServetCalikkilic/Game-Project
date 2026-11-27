@@ -1,0 +1,67 @@
+[
+  {
+    "id": "tech_age2_iron_age_v1",
+    "type": "technology",
+    "name": "Iron Age",
+    "category": "age",
+    "researched_at": "Citadel",
+    "cost": { "food": 300, "gold": 150 },
+    "research_time_s": 40,
+    "prerequisites": ["Barracks built", "Archery Yard or Stable built"],
+    "effect": "Advances the player from Age I to Age II. Unlocks Guardian and Ram training and the Age II technologies. Raises the population hard cap from 40 to 60.",
+    "unlocks": ["unit_guardian_v1", "unit_ram_v1", "tech_forged_blades_v1", "tech_reinforced_plating_v1"],
+    "unlock_condition": "Not yet in Age II and no other age research in progress."
+  },
+  {
+    "id": "tech_sharpened_tools_v1",
+    "type": "technology",
+    "name": "Sharpened Tools",
+    "category": "economy",
+    "researched_at": "Citadel",
+    "cost": { "wood": 100, "food": 75 },
+    "research_time_s": 25,
+    "prerequisites": [],
+    "effect": "Workers gather wood and food 20% faster.",
+    "unlocks": [],
+    "unlock_condition": "Available from Age I."
+  },
+  {
+    "id": "tech_longbow_training_v1",
+    "type": "technology",
+    "name": "Longbow Training",
+    "category": "military",
+    "researched_at": "ArcheryYard",
+    "cost": { "wood": 175, "gold": 75 },
+    "research_time_s": 30,
+    "prerequisites": ["Archery Yard built"],
+    "effect": "Archers gain +1 range and +2 damage.",
+    "unlocks": [],
+    "unlock_condition": "Available from Age I."
+  },
+  {
+    "id": "tech_forged_blades_v1",
+    "type": "technology",
+    "name": "Forged Blades",
+    "category": "military",
+    "researched_at": "Barracks",
+    "cost": { "food": 150, "gold": 100 },
+    "research_time_s": 35,
+    "prerequisites": ["tech_age2_iron_age_v1", "Barracks built"],
+    "effect": "Spearman, Guardian and Raider melee damage +20%.",
+    "unlocks": [],
+    "unlock_condition": "Requires Age II."
+  },
+  {
+    "id": "tech_reinforced_plating_v1",
+    "type": "technology",
+    "name": "Reinforced Plating",
+    "category": "military",
+    "researched_at": "Barracks",
+    "cost": { "food": 100, "gold": 120 },
+    "research_time_s": 35,
+    "prerequisites": ["tech_age2_iron_age_v1", "Barracks built"],
+    "effect": "Spearman, Guardian, Raider and Ram gain +1 pierce armor.",
+    "unlocks": [],
+    "unlock_condition": "Requires Age II."
+  }
+]
