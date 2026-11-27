@@ -24,3 +24,9 @@ __pycache__/
 venv/
 *.egg-info/
 rag/index/
+# Photon Fusion SDK (licensed; import it locally) and its AppId settings
+UnityRTS/Assets/Photon/
+UnityRTS/Assets/Photon.meta
+UnityRTS/Assets/PhotonFusion*
+UnityRTS/Assets/Resources/PhotonAppSettings*
+**/PhotonAppSettings.asset*

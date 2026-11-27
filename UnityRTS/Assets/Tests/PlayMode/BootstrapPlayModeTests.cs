@@ -2,6 +2,7 @@ using System.Collections;
 using System.IO;
 using NUnit.Framework;
 using Rts.Core;
+using Rts.Core.Net;
 using Rts.Game;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -80,6 +81,34 @@ namespace Rts.Tests
             // invalid plan never reaches the game
             _b.AiPanel.LoadPlanText(AiPlanPanel.SampleInvalidPlan);
             Assert.AreEqual(ReviewStatus.Invalid, _b.AiPanel.Review.Status);
+        }
+
+        [UnityTest]
+        public IEnumerator HostRole_ReplicatesFogFilteredStateToAClient()
+        {
+            Object.Destroy(_go);
+            yield return null;
+            _go = new GameObject("HostBootstrap");
+            _go.SetActive(false);
+            var b = _go.AddComponent<GameBootstrap>();
+            b.AutoStart = false;
+            _go.SetActive(true);
+            Assert.IsFalse(b.Started, "AutoStart off: the network launcher decides the role");
+
+            var net = new LoopbackNetwork();
+            var host = b.StartHost(net);
+            net.Host = host;
+            var client = net.Connect(2);
+            Assert.AreEqual(NetRole.Host, b.Ctx.Role);
+            Assert.IsTrue(b.Ctx.IsAuthority);
+
+            for (int i = 0; i < 12; i++) { yield return new WaitForSeconds(0.1f); net.Pump(); }
+            Assert.Greater(host.StatesSent, 0, "SimulationDriver replicates while the host runs");
+            Assert.IsTrue(client.HasState);
+            Assert.IsNull(client.Replica.FindCitadel(1), "the client never receives the host's hidden base");
+            Assert.IsNotNull(client.Replica.FindCitadel(2));
+            Assert.IsTrue(b.Views.IsRendered(b.Ctx.Sim.FindCitadel(1).Id));
+            _b = b;     // TearDown destroys _go
         }
     }
 }

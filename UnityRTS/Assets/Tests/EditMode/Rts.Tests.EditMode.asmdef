@@ -3,6 +3,7 @@
     "rootNamespace": "Rts.Tests",
     "references": [
         "Rts.Core",
+        "Rts.Game",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

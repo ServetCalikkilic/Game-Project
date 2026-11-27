@@ -38,6 +38,8 @@ LLM bir danışmandır, oyun otoritesi değildir.
 - **Senkronize edilen durum:** oyuncu kimliği, birim sahipliği, spawn/despawn, hareket/komut durumu, kaynak etkili eylemler, savaş sonuçları, bina durumu, çağ/teknoloji, maç durumu.
 - **Sınırlama:** Host oyuncusu teknik olarak tüm durumu görebilir. Bu bir prototip varsayımıdır ve raporda belirtilir. AI snapshot'ı yine de her oyuncu için görünürlük filtresinden geçer, host için bile.
 
+> Uygulama notu (ağ): Host Mode, `UnityRTS/Assets/Scripts/Core/Net` protokolü ve `Net/` Fusion adaptörü olarak gerçekleştirildi. Ayrıntı ve kurulum: `docs/unity_setup.md`.
+
 ## 3. Oyun Tasarımı
 
 ### Kaynaklar

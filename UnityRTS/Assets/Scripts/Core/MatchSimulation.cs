@@ -8,7 +8,7 @@ namespace Rts.Core
     /// both go through the same TryTrain / TryBuild / TryResearch / Order* methods. With Photon Fusion
     /// (Host Mode) this runs on the host, which is the single state authority; clients send requests.
     /// </summary>
-    public sealed class MatchSimulation
+    public sealed partial class MatchSimulation
     {
         public const float MapHalf = 100f;
         public const float BuildingSpacing = 7f;
@@ -89,6 +89,7 @@ namespace Rts.Core
 
         public Phase ComputePhase(int playerId)
         {
+            if (IsReplica) return ReplicaPhase;   // clients show the phase the host computed
             var p = Players[playerId];
             var vis = GetVisible(playerId);
             bool recentAttack = false;
@@ -120,6 +121,7 @@ namespace Rts.Core
         // ------------------------------------------------------------------ commands (authoritative)
         CommandResult Guard(int playerId)
         {
+            if (IsReplica) return CommandResult.Fail("client replica: commands are sent to the host");
             if (Result.Ended) return CommandResult.Fail("match has ended");
             if (!Players.ContainsKey(playerId)) return CommandResult.Fail("unknown player");
             return CommandResult.Success;
@@ -283,6 +285,7 @@ namespace Rts.Core
 
         public void OrderStop(int playerId, IEnumerable<int> ids)
         {
+            if (IsReplica) return;
             foreach (var u in OwnedUnits(playerId, ids)) { u.Order = OrderType.None; u.TargetId = 0; }
         }
 
@@ -291,7 +294,7 @@ namespace Rts.Core
         // ------------------------------------------------------------------ simulation step
         public void Tick(float dt)
         {
-            if (Result.Ended) return;
+            if (IsReplica || Result.Ended) return;   // replicas never simulate; they only apply host state
             Time += dt;
             _vis.Clear();
             foreach (int id in Players.Keys) _vis[id] = VisibilityService.FilterFor(id, Entities);

@@ -23,10 +23,10 @@ namespace Rts.Game
         void Update()
         {
             var input = RtsInput.Instance;
-            if (Ctx == null || Cam == null || input == null) return;
+            if (Ctx == null || Cam == null || input == null || !Ctx.Ready) return;
 
             if (input.Pressed(KeyCode.Escape)) Ctx.Selection.Clear();
-            if (input.Pressed(KeyCode.S)) { Ctx.Sim.OrderStop(Ctx.LocalPlayer, Ctx.Selection); Ctx.Say("Stop"); }
+            if (input.Pressed(KeyCode.S)) { Ctx.Commands.Stop(Ctx.Selection); Ctx.Say("Stop"); }
 
             // drop selection entries that died
             if (Ctx.Selection.Count > 0) Ctx.Selection.RemoveWhere(id => Ctx.Sim.Get(id) == null);
@@ -99,16 +99,16 @@ namespace Rts.Game
         void RightClick(Vector2 screen)
         {
             var enemy = PickTarget(screen, true, false);
-            if (enemy != null) { Ctx.Say(Ctx.Sim.OrderAttack(Ctx.LocalPlayer, Ctx.Selection, enemy.Id), "Attack"); return; }
+            if (enemy != null) { Ctx.Say(Ctx.Commands.Attack(Ctx.Selection, enemy.Id), "Attack"); return; }
 
             bool hasWorker = false;
             foreach (int id in Ctx.Selection) { var e = Ctx.Sim.Get(id); if (e != null && e.Kind == EntityKind.Unit && e.Unit == UnitType.Worker) hasWorker = true; }
             var node = hasWorker ? PickTarget(screen, false, true) : null;
-            if (node != null) { Ctx.Say(Ctx.Sim.OrderGather(Ctx.LocalPlayer, Ctx.Selection, node.Id), "Gather " + node.NodeResource); return; }
+            if (node != null) { Ctx.Say(Ctx.Commands.Gather(Ctx.Selection, node.Id), "Gather " + node.NodeResource); return; }
 
             var ray = Cam.ScreenPointToRay(screen);
             if (new Plane(Vector3.up, Vector3.zero).Raycast(ray, out float dist))
-                Ctx.Say(Ctx.Sim.OrderMove(Ctx.LocalPlayer, Ctx.Selection, GameContext.ToSim(ray.GetPoint(dist))), "Move");
+                Ctx.Say(Ctx.Commands.Move(Ctx.Selection, GameContext.ToSim(ray.GetPoint(dist))), "Move");
         }
     }
 }

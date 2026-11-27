@@ -1,0 +1,19 @@
+{
+    "name": "Rts.Net.Fusion",
+    "rootNamespace": "Rts.Net",
+    "references": [
+        "Rts.Core",
+        "Rts.Game"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "RTS_FUSION"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

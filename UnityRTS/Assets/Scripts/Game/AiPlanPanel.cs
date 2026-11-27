@@ -20,6 +20,7 @@ namespace Rts.Game
         public PlanReview Review { get; private set; }
 
         string _planJson = "";
+        string _reviewedJson = "";   // exactly what the player reviewed; this is what APPROVE submits
         string _status = "";
         string _log = "";
         Vector2 _scroll;
@@ -39,17 +40,30 @@ namespace Rts.Game
         {
             var input = RtsInput.Instance;
             if (input != null && input.Pressed(KeyCode.F2)) Visible = !Visible;
-            if (input != null && input.Pressed(KeyCode.F9)) ExportSnapshot();
+            if (input != null && input.Pressed(KeyCode.F9) && Ctx != null && Ctx.Ready) ExportSnapshot();
         }
 
+        /// <summary>Asks the authoritative side for this player's AiSafeSnapshot and writes it to logs/ai_snapshot.json.
+        /// Local/Host: immediate. Client: the host builds it (it knows phase and events) and the file is written when it arrives.</summary>
         public string ExportSnapshot()
+        {
+            string written = null;
+            try
+            {
+                Ctx.Commands.RequestSnapshot(json => written = WriteSnapshot(json));
+                if (written == null && Ctx.Role == NetRole.Client) _status = "Snapshot requested from the host...";
+            }
+            catch (Exception ex) { _status = "Export failed: " + ex.Message; }
+            return written;
+        }
+
+        string WriteSnapshot(string json)
         {
             try
             {
-                var snap = Ctx.Sim.BuildSnapshot(Ctx.LocalPlayer, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() / 1000.0);
                 Directory.CreateDirectory(Path.GetDirectoryName(SnapshotPath));
-                File.WriteAllText(SnapshotPath, snap.ToJson(), new UTF8Encoding(false));
-                _status = $"Snapshot saved: {SnapshotPath}\nphase={snap.phase}, visible enemy groups={snap.visible_enemies.Length}, events={snap.recent_events.Length}";
+                File.WriteAllText(SnapshotPath, json, new UTF8Encoding(false));
+                _status = $"Snapshot saved: {SnapshotPath} ({json.Length} bytes)";
                 return SnapshotPath;
             }
             catch (Exception ex) { _status = "Export failed: " + ex.Message; return null; }
@@ -58,13 +72,14 @@ namespace Rts.Game
         public void LoadPlanText(string json)
         {
             _planJson = json;
+            _reviewedJson = json;
             Review = PlanReview.FromJson(json, Ctx.Sim, Ctx.LocalPlayer);
             _log = "";
         }
 
         void OnGUI()
         {
-            if (!Visible || Ctx == null) return;
+            if (!Visible || Ctx == null || !Ctx.Ready) return;
             float s = RtsHud.Scale;
             var oldMatrix = GUI.matrix;
             GUI.matrix = Matrix4x4.Scale(new Vector3(s, s, 1));
@@ -134,8 +149,8 @@ namespace Rts.Game
 
         void Approve()
         {
-            var report = Review.Approve(Ctx.Sim, Ctx.LocalPlayer);
-            _log = "Approved. Executed " + report.Executed + ", rejected " + report.Rejected + ":\n" + string.Join("\n", report.Lines);
+            var report = Ctx.Commands.ApprovePlan(Review, _reviewedJson);
+            _log = (Ctx.Role == NetRole.Client ? "Submitted. " : "Approved. ") + "Executed " + report.Executed + ", rejected " + report.Rejected + ":\n" + string.Join("\n", report.Lines);
             Ctx.Say($"AI plan approved: {report.Executed} executed, {report.Rejected} rejected");
         }
     }

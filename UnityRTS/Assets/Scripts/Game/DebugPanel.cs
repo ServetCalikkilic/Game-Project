@@ -41,7 +41,7 @@ namespace Rts.Game
 
         void OnGUI()
         {
-            if (!Visible || Ctx == null) return;
+            if (!Visible || Ctx == null || !Ctx.Ready || Ctx.Role == NetRole.Client) return;   // debug cheats act on the authoritative sim only
             float s = RtsHud.Scale;
             var old = GUI.matrix; GUI.matrix = Matrix4x4.Scale(new Vector3(s, s, 1));
             var r = new Rect(8, 32, 250, 210);

@@ -26,8 +26,8 @@ namespace Rts.Game
         void Update()
         {
             var input = RtsInput.Instance;
-            if (Ctx == null || input == null) return;
-            if (input.Pressed(KeyCode.Tab))
+            if (Ctx == null || input == null || !Ctx.Ready) return;
+            if (input.Pressed(KeyCode.Tab) && Ctx.Role == NetRole.Local)
             {
                 Ctx.LocalPlayer = Ctx.LocalPlayer == 1 ? 2 : 1;
                 Ctx.Selection.Clear();
@@ -42,6 +42,7 @@ namespace Rts.Game
         void OnGUI()
         {
             if (Ctx == null || Ctx.Sim == null || Cam == null) return;
+            if (!Ctx.Ready) { GUI.Box(new Rect(Screen.width / 2f - 170, Screen.height / 2f - 20, 340, 40), ""); GUI.Label(new Rect(Screen.width / 2f - 150, Screen.height / 2f - 10, 320, 24), string.IsNullOrEmpty(Ctx.NetStatus) ? "Waiting for the host state..." : Ctx.NetStatus); return; }
             bool repaint = Event.current.type == EventType.Repaint;
             float s = Scale;
             var oldMatrix = GUI.matrix;
@@ -65,7 +66,7 @@ namespace Rts.Game
             var p = Ctx.Me;
             string age = p.Age >= 2 ? "Age II" : "Age I";
             GUI.Label(new Rect(8, 3, W - 16, 22),
-                $"Player {Ctx.LocalPlayer}   Wood {p.Wood}   Food {p.Food}   Gold {p.Gold}   |   Pop {p.PopulationUsed}/{p.PopulationCap}   |   {age}   |   Phase: {Ctx.Sim.ComputePhase(Ctx.LocalPlayer)}   |   t={Ctx.Sim.Time:0}s   |   F1 Debug   F2 AI Commander   Tab switch player   H help");
+                $"{(Ctx.Role == NetRole.Local ? "" : Ctx.NetStatus + "   |   ")}Player {Ctx.LocalPlayer}   Wood {p.Wood}   Food {p.Food}   Gold {p.Gold}   |   Pop {p.PopulationUsed}/{p.PopulationCap}   |   {age}   |   Phase: {Ctx.Sim.ComputePhase(Ctx.LocalPlayer)}   |   t={Ctx.Sim.Time:0}s   |   F1 Debug   F2 AI Commander   Tab switch player   H help");
             if (repaint) Block(r);
         }
 
@@ -173,7 +174,7 @@ namespace Rts.Game
                     if (GUILayout.Button($"Train {u}\n{ud.Cost}", GUILayout.Height(40)))
                     {
                         int n = RtsInput.Instance != null && RtsInput.Instance.ShiftHeld ? 5 : 1;
-                        Ctx.Say(Ctx.Sim.TryTrain(Ctx.LocalPlayer, u, n, b.Id), "Training " + n + "x " + u);
+                        Ctx.Say(Ctx.Commands.Train(u, n, b.Id), "Training " + n + "x " + u);
                     }
                     GUI.enabled = true;
                 }
@@ -188,7 +189,7 @@ namespace Rts.Game
                     bool done = me.Has(t) || me.Researching.Contains(t);
                     GUI.enabled = !done && me.CanAfford(td.Cost) && (!td.RequiresAge2 || me.Age >= 2);
                     if (GUILayout.Button($"{(done ? "[done] " : "")}{t}\n{td.Cost}", GUILayout.Height(40)))
-                        Ctx.Say(Ctx.Sim.TryResearch(Ctx.LocalPlayer, t), "Researching " + t);
+                        Ctx.Say(Ctx.Commands.Research(t), "Researching " + t);
                     GUI.enabled = true;
                 }
                 GUILayout.EndHorizontal();
@@ -207,7 +208,7 @@ namespace Rts.Game
                 {
                     var site = Ctx.Sim.FindBuildSite(Ctx.LocalPlayer);
                     if (!site.HasValue) Ctx.Say("No free build site near the Citadel");
-                    else Ctx.Say(Ctx.Sim.TryBuild(Ctx.LocalPlayer, bt, site.Value, workers[0].Id), "Building " + bt);
+                    else Ctx.Say(Ctx.Commands.Build(bt, site.Value, workers[0].Id), "Building " + bt);
                 }
                 GUI.enabled = true;
             }
@@ -220,7 +221,7 @@ namespace Rts.Game
                     Entity best = null;
                     foreach (var n in Ctx.Sim.Entities)
                         if (n.Alive && n.Kind == EntityKind.ResourceNode && n.NodeResource == res && c != null && (best == null || Vec2.Distance(n.Pos, c.Pos) < Vec2.Distance(best.Pos, c.Pos))) best = n;
-                    if (best != null) Ctx.Say(Ctx.Sim.OrderGather(Ctx.LocalPlayer, Ctx.Selection, best.Id), "Gathering " + res);
+                    if (best != null) Ctx.Say(Ctx.Commands.Gather(Ctx.Selection, best.Id), "Gathering " + res);
                 }
             GUILayout.EndHorizontal();
         }

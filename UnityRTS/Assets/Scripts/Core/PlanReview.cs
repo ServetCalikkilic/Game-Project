@@ -29,6 +29,15 @@ namespace Rts.Core
             return review;
         }
 
+        /// <summary>Network client: the player approved, the JSON is sent to the host, which re-validates and executes.
+        /// The local review is closed so it cannot be approved twice.</summary>
+        public bool MarkSubmittedToHost()
+        {
+            if (Status != ReviewStatus.Pending) return false;
+            Status = ReviewStatus.Approved;
+            return true;
+        }
+
         public bool Reject()
         {
             if (Status != ReviewStatus.Pending) return false;

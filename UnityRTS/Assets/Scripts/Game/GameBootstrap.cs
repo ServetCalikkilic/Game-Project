@@ -1,47 +1,90 @@
 using Rts.Core;
+using Rts.Core.Net;
 using UnityEngine;
 
 namespace Rts.Game
 {
     /// <summary>
-    /// The only component the demo scene needs. It builds the match, ground, camera rig and every UI/controller component at runtime,
-    /// so there is nothing else to wire by hand. Local, single-process: the simulation here is the state authority
-    /// (Photon Fusion Host Mode would run it on the host; see docs/unity_setup.md).
+    /// The only component the demo scene needs. It builds ground, camera rig and every UI/controller component at runtime.
+    ///   AutoStart (default): offline single-process match (Local role), exactly as before.
+    ///   AutoStart off: a network launcher (see Rts.Net.Fusion) calls StartHost / StartClient once the session is up.
+    /// Host: runs the one authoritative MatchSimulation and replicates fog-filtered state. Client: shows a replica and sends commands.
     /// </summary>
     public sealed class GameBootstrap : MonoBehaviour
     {
         public Camera MainCamera;      // optional: defaults to Camera.main (created if missing)
         public int LocalPlayer = 1;
+        public bool AutoStart = true;
 
         public GameContext Ctx { get; private set; }
         public EntityViewManager Views { get; private set; }
         public AiPlanPanel AiPanel { get; private set; }
         public DebugPanel Debug { get; private set; }
         public SelectionController Selection { get; private set; }
+        public bool Started => Ctx != null;
 
-        void Awake()
+        RtsCameraController _rig;
+        bool _focused;
+
+        void Awake() { if (AutoStart) StartLocal(); }
+
+        public void StartLocal()
         {
             var sim = MapSetup.CreateDemoMatch();
-            Ctx = new GameContext { Sim = sim, LocalPlayer = LocalPlayer };
+            Begin(NetRole.Local, LocalPlayer, sim, null, null);
+        }
+
+        /// <summary>Host Mode: this machine owns the authoritative simulation and plays as player 1.</summary>
+        public HostSession StartHost(IHostTransport transport)
+        {
+            var sim = MapSetup.CreateDemoMatch();
+            var host = new HostSession(sim, transport, 1);
+            Begin(NetRole.Host, 1, sim, host, null);
+            return host;
+        }
+
+        /// <summary>Client: shows the replica the host sends; every command goes to the host.</summary>
+        public ClientSession StartClient(int playerId, IClientTransport transport)
+        {
+            var client = new ClientSession(playerId, transport);
+            Begin(NetRole.Client, playerId, client.Replica, null, client);
+            return client;
+        }
+
+        void Begin(NetRole role, int localPlayer, MatchSimulation sim, HostSession host, ClientSession client)
+        {
+            if (Ctx != null) { Debug_Log("GameBootstrap already started"); return; }
+            Ctx = new GameContext { Sim = sim, Role = role, LocalPlayer = localPlayer, Host = host, Client = client };
+            Ctx.Commands = role == NetRole.Client ? (ICommandSink)new ClientCommandSink(client) : new LocalCommandSink(sim, () => Ctx.LocalPlayer);
             Ctx.RefreshVisibility();
 
             BuildWorld();
             var cam = SetupCamera();
 
-            var input = Add<RtsInput>(gameObject);
+            Add<RtsInput>(gameObject);
             var driver = Add<SimulationDriver>(gameObject); driver.Ctx = Ctx;
             Views = Add<EntityViewManager>(new GameObject("Entities")); Views.Ctx = Ctx;
             Views.transform.SetParent(transform, false);
 
-            var rig = Add<RtsCameraController>(gameObject); rig.Cam = cam;
-            var citadel = sim.FindCitadel(LocalPlayer);
-            rig.FocusOn(GameContext.ToWorld(citadel.Pos));
+            _rig = Add<RtsCameraController>(gameObject); _rig.Cam = cam;
+            TryFocus();
 
             Selection = Add<SelectionController>(gameObject); Selection.Ctx = Ctx; Selection.Cam = cam;
-            var hud = Add<RtsHud>(gameObject); hud.Ctx = Ctx; hud.Cam = cam; hud.Selection = Selection; hud.CameraRig = rig;
+            var hud = Add<RtsHud>(gameObject); hud.Ctx = Ctx; hud.Cam = cam; hud.Selection = Selection; hud.CameraRig = _rig;
             AiPanel = Add<AiPlanPanel>(gameObject); AiPanel.Ctx = Ctx;
             Debug = Add<DebugPanel>(gameObject); Debug.Ctx = Ctx;
-            Ctx.Say("Select your Workers (drag a box), then press Gather. Train more at the Citadel.");
+            Ctx.Say(role == NetRole.Client ? "Connected. Waiting for the host's first state..." : "Select your Workers (drag a box), then press Gather. Train more at the Citadel.");
+        }
+
+        static void Debug_Log(string m) { UnityEngine.Debug.LogWarning(m); }
+
+        void Update() { if (!_focused) TryFocus(); }
+
+        void TryFocus()
+        {
+            if (_focused || Ctx == null || _rig == null || !Ctx.Ready) return;
+            _rig.FocusOn(GameContext.ToWorld(Ctx.Sim.FindCitadel(Ctx.LocalPlayer).Pos));
+            _focused = true;
         }
 
         static T Add<T>(GameObject go) where T : Component => go.AddComponent<T>();

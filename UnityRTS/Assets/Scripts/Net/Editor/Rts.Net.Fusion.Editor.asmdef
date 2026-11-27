@@ -1,0 +1,22 @@
+{
+    "name": "Rts.Net.Fusion.Editor",
+    "rootNamespace": "Rts.Net.EditorTools",
+    "references": [
+        "Rts.Core",
+        "Rts.Game",
+        "Rts.Net.Fusion"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "RTS_FUSION"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

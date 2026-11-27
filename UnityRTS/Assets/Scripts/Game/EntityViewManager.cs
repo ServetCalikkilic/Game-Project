@@ -13,6 +13,7 @@ namespace Rts.Game
         public GameContext Ctx;
         readonly Dictionary<int, GameObject> _views = new Dictionary<int, GameObject>();
         readonly List<int> _stale = new List<int>();
+        readonly HashSet<int> _placed = new HashSet<int>();   // views that already have a position (client smoothing)
         public int ViewCount => _views.Count;
         public bool IsRendered(int entityId) => _views.TryGetValue(entityId, out var go) && go.activeSelf;
 
@@ -41,7 +42,7 @@ namespace Rts.Game
                 var e = Ctx.Sim.Get(kv.Key);
                 if (e == null || (e.Kind == EntityKind.ResourceNode && e.Amount <= 0)) _stale.Add(kv.Key);
             }
-            foreach (int id in _stale) { Destroy(_views[id]); _views.Remove(id); }
+            foreach (int id in _stale) { Destroy(_views[id]); _views.Remove(id); _placed.Remove(id); }
         }
 
         GameObject Create(Entity e)
@@ -88,7 +89,11 @@ namespace Rts.Game
             float height = size.y * growth;
             bool capsuleOrCyl = go.name.StartsWith("Worker") || go.name.StartsWith("Spearman") || go.name.StartsWith("Archer");
             t.localScale = capsuleOrCyl ? new Vector3(size.x, size.y, size.z) : new Vector3(size.x, height, size.z);
-            t.position = new Vector3(e.Pos.X, height * (capsuleOrCyl ? 1f : 0.5f), e.Pos.Y);
+            var goal = new Vector3(e.Pos.X, height * (capsuleOrCyl ? 1f : 0.5f), e.Pos.Y);
+            // Replicas receive state ~5x per second: glide toward it instead of teleporting.
+            t.position = Ctx.Role == NetRole.Client && !_placed.Add(e.Id) && (t.position - goal).sqrMagnitude < 400f
+                ? Vector3.Lerp(t.position, goal, Mathf.Clamp01(12f * Time.deltaTime))
+                : goal;
 
             // face movement/target direction for units
             if (e.Kind == EntityKind.Unit)

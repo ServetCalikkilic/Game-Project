@@ -38,6 +38,13 @@ Ayrıntılı mimari: `docs/architecture.md`. Oyun verisinin tek doğru kaynağı
 - AI'ya giden her şey `VisibilityService.FilterFor` → `VisibleWorld` → `AiSnapshotBuilder` yolundan çıkar; `AiSafeSnapshot` düşman konumu/ekonomisi için alan taşımaz (test bunu zorlar).
 - Oyun verisi (`GameData`) `rag/knowledge/*.json` ile aynı olmak zorundadır; `GameDataTests` karşılaştırır. Değişiklikten sonra EditMode ve PlayMode testlerini çalıştır.
 
+## Ağ Katmanı (Photon Fusion 2.x, Host Mode)
+- Host tek state authority'dir: gerçek `MatchSimulation` yalnızca host'ta çalışır. İstemci `ClientSession` içinde bir **replica** tutar (Tick etmez, komut kabul etmez) ve komutları host'a yollar.
+- Aktarım yalnızca ince bir adaptördür (`Rts.Net.Fusion`, `RTS_FUSION` tanımı ile derlenir): istemci→host `RPC_Command(bytes)`, host→istemci `RPC_ToPlayer(target, bytes)`. Protokol (`Rts.Core.Net`) Fusion'dan bağımsızdır ve `LoopbackNetwork` ile test edilir.
+- Komut mesajlarında oyuncu kimliği alanı yoktur; host gönderen kimliğini bağlantıdan (`RpcInfo.Source`) türetir. Host her komutu `HostAuthority` üzerinden aynı `Try*/Order*` yollarına, AI planlarını `PlanReview` → `GameActionValidator` yoluna sokar.
+- Host her oyuncuya **yalnızca kendi fog-filtreli durumunu** yollar (`StateCodec.Capture`): rakibin ekonomisi, görünmeyen birimleri ve emirleri ağa hiç çıkmaz.
+- Fusion SDK repoya konmaz (lisans, `.gitignore`); Photon AppId'si repoya yazılmaz.
+
 ## Kod Yaklaşımı
 - Değişiklikleri küçük, modüler ve test edilebilir tut; bilinmeyen veriyi uydurma.
 - Bilgi kayıtlarında benzersiz ID kullan (`unit_*`, `bld_*`, `tech_*`, `rule_*`, hepsi `_v<N>` ile biter).
