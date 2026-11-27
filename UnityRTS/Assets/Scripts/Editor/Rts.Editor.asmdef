@@ -1,0 +1,19 @@
+{
+    "name": "Rts.Editor",
+    "rootNamespace": "Rts.EditorTools",
+    "references": [
+        "Rts.Core",
+        "Rts.Game"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

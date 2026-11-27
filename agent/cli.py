@@ -23,6 +23,10 @@ async def _main(args) -> int:
     logger = AgentLogger(session, args.log)
     async with McpStdioToolClient(session) as client:
         result = await AgentRunner(OfflineLLM(), client, session, logger).run(args.question)
+    if args.plan_out and result.plan is not None:
+        from pathlib import Path
+        Path(args.plan_out).parent.mkdir(parents=True, exist_ok=True)
+        Path(args.plan_out).write_text(json.dumps(result.plan, ensure_ascii=False), encoding="utf-8")
     print(json.dumps({"ok": result.ok, "steps": result.steps, "retries": result.retries,
                       "tool_calls": result.tool_calls, "security_events": result.security_events,
                       "errors": result.errors, "plan": result.plan}, indent=2, ensure_ascii=False))
@@ -36,6 +40,7 @@ def main() -> None:
     p.add_argument("--match-id", default="dev-match")
     p.add_argument("--player-id", default="dev-player")
     p.add_argument("--log", default=None, help="JSONL log file (e.g. logs/agent.jsonl)")
+    p.add_argument("--plan-out", default=None, help="write the resulting ActionPlan JSON here (Unity AI panel: 'Load plan file' reads logs/ai_plan.json)")
     sys.exit(asyncio.run(_main(p.parse_args())))
 
 

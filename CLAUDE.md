@@ -32,6 +32,12 @@ Ayrıntılı mimari: `docs/architecture.md`. Oyun verisinin tek doğru kaynağı
 ## Anlamsal Durum (AiSafeSnapshot)
 `phase` (EarlyEconomy/BuildUp/UnderAttack/Skirmish/LateGame), kaynaklar, kendi ordu özeti, kendi binaları, teknoloji/çağ durumu, son olaylar (~30 sn), görünür düşmanlar (tür, sayı, kaba bölge) ve snapshot zaman damgası.
 
+## Unity Katmanı (`UnityRTS/`, ayrıntı: `docs/unity_setup.md`)
+- Unity 6000.1.10f1. Oyun mantığı `Rts.Core` assembly'sinde (UnityEngine kullanmaz); Unity katmanı (`Rts.Game`) yalnızca görüntüler ve girdiyi komuta çevirir.
+- Oyuncu komutları ve onaylanan AI planları aynı `MatchSimulation.Try*/Order*` yolundan geçer. Plan akışı: `ActionPlanParser` → `PlanReview` (Approve/Reject) → `GameActionValidator` → `ApprovedPlanExecutor`.
+- AI'ya giden her şey `VisibilityService.FilterFor` → `VisibleWorld` → `AiSnapshotBuilder` yolundan çıkar; `AiSafeSnapshot` düşman konumu/ekonomisi için alan taşımaz (test bunu zorlar).
+- Oyun verisi (`GameData`) `rag/knowledge/*.json` ile aynı olmak zorundadır; `GameDataTests` karşılaştırır. Değişiklikten sonra EditMode ve PlayMode testlerini çalıştır.
+
 ## Kod Yaklaşımı
 - Değişiklikleri küçük, modüler ve test edilebilir tut; bilinmeyen veriyi uydurma.
 - Bilgi kayıtlarında benzersiz ID kullan (`unit_*`, `bld_*`, `tech_*`, `rule_*`, hepsi `_v<N>` ile biter).
