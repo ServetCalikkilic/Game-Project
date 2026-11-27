@@ -131,7 +131,7 @@ Doğrulayıcı kontrolleri: izinli eylem tipi, izinli ID'ler, sayı aralığı, 
 | Klasör | İçerik |
 |---|---|
 | `UnityRTS/` | Unity 6 projesi |
-| `agent/` | AI Gateway ve LLM ajanı |
+| `agent/` | LLM ajan döngüsü (`agent_runner.py`), MCP istemcisi, ActionPlan doğrulama, güvenlik/loglama. Çalıştırma: `python -m agent.cli "soru"`; test: `python -m unittest discover -s agent/tests` |
 | `mcp-server/` | Özel MCP sunucusu |
 | `rag/knowledge/` | `units.json`, `buildings.json`, `technologies.json`, `rules.md` |
 | `schemas/` | `action_plan.schema.json` |

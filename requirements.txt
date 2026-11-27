@@ -1,5 +1,8 @@
 # Runtime: official MCP Python SDK (RAG/BM25 retriever and tools are stdlib-only).
 mcp>=1.2,<2
 
+# Optional: validate ActionPlans with the real JSON Schema (a built-in validator mirrors it otherwise).
+jsonschema>=4
+
 # Tests (the suite also runs with plain `python -m unittest`).
 pytest>=8
